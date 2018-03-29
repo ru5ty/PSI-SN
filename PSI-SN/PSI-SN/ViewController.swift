@@ -29,7 +29,21 @@ class ViewController: UIViewController {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
-
+    
+    func composePin(regions: [Region]) {
+        for region in regions {
+            if region.name != "national" {
+                let pin = self.makePin(region: region)
+                pin.map = mapContainerView
+            }
+        }
+    }
+    
+    func makePin(region: Region) -> GMSMarker {
+        let marker = GMSMarker(position: region.coordinate)
+        marker.snippet = region.name.uppercased()
+        marker.title = "singapore".uppercased()
+        return marker
+    }
 }
 
