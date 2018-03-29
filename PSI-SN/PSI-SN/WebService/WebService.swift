@@ -11,7 +11,7 @@ import Alamofire
 
 struct EndPoint {
     static let baseURL = "https://api.data.gov.sg/v1"
-    static let pollutant = "/environment/psi"
+    static let pollutant = "\(EndPoint.baseURL)/environment/psi"
 }
 
 class Services: NSObject {
@@ -30,7 +30,10 @@ class Services: NSObject {
     func getPollutantData(params: [String: Any]?, completion:@escaping (_ data : Any, _ isSuccess : Bool) -> Void) {
         Alamofire.request(EndPoint.pollutant, method: .get, parameters: params).validate().responseJSON { (response) in
             if response.result.isSuccess {
-                
+                let regions = DataManager.sharedInstance.composePollutantData(data: response.result.value as! [String : Any])
+                completion(regions!, true)
+            } else {
+                completion([], false)
             }
         }
         
