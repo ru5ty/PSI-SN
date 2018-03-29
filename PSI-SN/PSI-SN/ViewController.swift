@@ -17,6 +17,12 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         let camera = GMSCameraPosition.camera(withLatitude: 1.290270, longitude: 103.851959, zoom: 11.0)
         mapContainerView.camera = camera
+        
+        Services.sharedInstance.getPollutantData(params: nil) { (results, success) in
+            if success {
+                self.composePin(regions: results as! [Region])
+            }
+        }
     }
 
     override func didReceiveMemoryWarning() {
