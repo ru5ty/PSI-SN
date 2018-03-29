@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Alamofire
 
 struct EndPoint {
     static let baseURL = "https://api.data.gov.sg/v1"
@@ -20,7 +21,18 @@ class Services: NSObject {
      */
     static let sharedInstance = Services()
     
+    /**
+        Get All Pollutant Data
+        - Parameter params: dictionary of parameters
+        - Completion data: result object from API
+        - Completion isSuccess: return API response code
+     */
     func getPollutantData(params: [String: Any]?, completion:@escaping (_ data : Any, _ isSuccess : Bool) -> Void) {
+        Alamofire.request(EndPoint.pollutant, method: .get, parameters: params).validate().responseJSON { (response) in
+            if response.result.isSuccess {
+                
+            }
+        }
         
     }
 }
