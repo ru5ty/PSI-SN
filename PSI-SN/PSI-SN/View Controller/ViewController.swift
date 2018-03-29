@@ -15,8 +15,8 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        let camera = GMSCameraPosition.camera(withLatitude: 1.290270, longitude: 103.851959, zoom: 11.0)
-        mapContainerView.camera = camera
+        
+        self.cameraToCenter(coordinate: CLLocationCoordinate2D(latitude: 1.290270, longitude: 103.851959), zoom: 10.7)
         
         Services.sharedInstance.getPollutantData(params: nil) { (results, success) in
             if success {
@@ -34,6 +34,9 @@ class ViewController: UIViewController {
         for region in regions {
             if region.name != "national" {
                 let pin = self.makePin(region: region)
+                if region.name == "central" {
+                    self.cameraToCenter(coordinate: region.coordinate, zoom: 10.7)
+                }
                 pin.map = mapContainerView
             }
         }
@@ -44,6 +47,11 @@ class ViewController: UIViewController {
         marker.snippet = region.name.uppercased()
         marker.title = "singapore".uppercased()
         return marker
+    }
+    
+    func cameraToCenter(coordinate: CLLocationCoordinate2D, zoom: Float) {
+        let camera = GMSCameraPosition.camera(withTarget: coordinate, zoom: zoom)
+        mapContainerView.camera = camera
     }
 }
 
