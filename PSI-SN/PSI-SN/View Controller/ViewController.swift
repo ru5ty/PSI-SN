@@ -11,6 +11,9 @@ import GoogleMaps
 
 class ViewController: UIViewController {
     @IBOutlet weak var mapContainerView: GMSMapView!
+    @IBOutlet weak var filterContainerView: UIView!
+    @IBOutlet weak var dateTextField: UITextField!
+    @IBOutlet weak var timeTextField: UITextField!
     var regions: [Region] = []
     
     override func viewDidLoad() {
@@ -18,6 +21,7 @@ class ViewController: UIViewController {
         // Do any additional setup after loading the view, typically from a nib.
         
         self.cameraToCenter(coordinate: CLLocationCoordinate2D(latitude: 1.290270, longitude: 103.851959), zoom: 10.7)
+        self.filterContainerView.addBorderToEdge(edge: .bottom, color: .black, height: 1.0)
         
         Services.sharedInstance.getPollutantData(params: nil) { (results, success) in
             if success {
@@ -78,5 +82,26 @@ extension ViewController: GMSMapViewDelegate{
         let region = self.getSelectedRegion(index: marker.userData as! Int)
         self.gotoDetail(region: region)
     }
+    
+    func mapView(_ mapView: GMSMapView, didTap overlay: GMSOverlay) {
+        self.view.endEditing(true)
+    }
+    
+    func mapView(_ mapView: GMSMapView, didTapAt coordinate: CLLocationCoordinate2D) {
+        self.view.endEditing(true)
+    }
+    
+    func mapView(_ mapView: GMSMapView, willMove gesture: Bool) {
+        self.view.endEditing(true)
+    }
 }
 
+extension ViewController: UITextFieldDelegate{
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        if textField == self.dateTextField {
+            textField.inputView = CustomInputView.instanceFromNIB(inputType: .Date)
+        } else if textField == self.timeTextField {
+            textField.inputView = CustomInputView.instanceFromNIB(inputType: .Time)
+        }
+    }
+}
