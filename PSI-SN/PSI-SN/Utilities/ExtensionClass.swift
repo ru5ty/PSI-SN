@@ -17,11 +17,11 @@ extension UIView {
      - Parameter size: round size
      */
     func makeRound(corners: UIRectCorner, size: CGSize) {
-        let maskPath = UIBezierPath(roundedRect: bounds, byRoundingCorners: (corners), cornerRadii: size)
+        let maskPath = UIBezierPath(roundedRect: self.bounds, byRoundingCorners: (corners), cornerRadii: size)
         let maskLayer = CAShapeLayer()
-        maskLayer.bounds = bounds
+        maskLayer.bounds = self.bounds
         maskLayer.path = maskPath.cgPath
-        layer.mask = maskLayer
+        self.layer.mask = maskLayer
     }
     
     /**
