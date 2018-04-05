@@ -53,6 +53,10 @@ class ViewController: UIViewController {
     }
     
 //    MARK: Customs
+    /**
+     Call Pollutant API
+     - Parameter parameter: date / time filter
+     */
     func getPollutions(parameter: [String : Any]?) {
         HUD.sharedInstance.showHUD()
         Services.sharedInstance.getPollutantData(params: parameter) { (results, success) in
@@ -66,6 +70,10 @@ class ViewController: UIViewController {
         }
     }
     
+    /**
+     Compose pin marker into maps
+     - Parameter regions: array of region, result from API
+     */
     func composePin(regions: [Region]) {
         var index = 0
         for region in regions {
@@ -81,6 +89,10 @@ class ViewController: UIViewController {
         }
     }
     
+    /**
+     Create google maps pin marker
+     - Parameter region: selected region from API
+     */
     func makePin(region: Region) -> GMSMarker {
         let marker = GMSMarker(position: region.coordinate)
         marker.snippet = region.name.uppercased()
@@ -88,19 +100,36 @@ class ViewController: UIViewController {
         return marker
     }
     
+    /**
+     Zoom & centering maps
+     - Parameter coordinate: coordinate to center
+     - Parameter zoom: number of zooming
+     */
     func cameraToCenter(coordinate: CLLocationCoordinate2D, zoom: Float) {
         let camera = GMSCameraPosition.camera(withTarget: coordinate, zoom: zoom)
         mapContainerView.camera = camera
     }
     
+    /**
+     Push to reading page
+     - Parameter region: selected region from API
+     */
     func gotoDetail(region: Region){
         self.performSegue(withIdentifier: "detailSegue", sender: region)
     }
     
+    /**
+     Get selected region when tap pin marker
+     - Parameter index: index of selected region
+     */
     func getSelectedRegion(index: Int) -> Region{
         return self.regions[index]
     }
     
+    /**
+     Dragable filter view
+     - Parameter sender: pan gesture
+     */
     @objc func draggedView(_ sender: UIPanGestureRecognizer){
         let translation = sender.translation(in: self.view)
         var top: CGFloat = self.filterContainerView.center.y + translation.y
@@ -113,6 +142,10 @@ class ViewController: UIViewController {
         sender.setTranslation(CGPoint.zero, in: self.view)
     }
     
+    /**
+     Set center of filter view
+     - Parameter center: center of point
+     */
     func setFilterCenter(center: CGPoint!){
         self.filterContainerView.center = center
         self.rotateButton(angle: CGFloat(center.y==min ? 0 : Double.pi))
@@ -120,10 +153,17 @@ class ViewController: UIViewController {
         
     }
     
+    /**
+     Rotate filter view indicator
+     - Parameter angle: rotation degree
+     */
     func rotateButton(angle: CGFloat){
         self.dropButton.transform = CGAffineTransform(rotationAngle: angle)
     }
     
+    /**
+     Refrest Pollutant API with filter
+     */
     func refreshData(){
         var params: [String : Any] = [:]
         if !(self.dateTextField.text?.isEmpty)! {
@@ -151,8 +191,8 @@ extension ViewController: GMSMapViewDelegate{
     func mapView(_ mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView? {
         let region = self.getSelectedRegion(index: marker.userData as! Int)
         let view = Bundle.main.loadNibNamed("MapMarker", owner: self, options: nil)?.first as! MapMarker
-        view.topLabel.text = "SINGAPORE"
-        view.bottomLabel.text = region.name
+        view.topLabel.text = "singapore".uppercased()
+        view.bottomLabel.text = region.name.uppercased()
         return view
     }
     func mapView(_ mapView: GMSMapView, didTapInfoWindowOf marker: GMSMarker) {
