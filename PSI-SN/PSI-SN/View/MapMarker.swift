@@ -7,3 +7,18 @@
 //
 
 import Foundation
+import UIKit
+
+class MapMarker: UIView {
+    
+    @IBOutlet weak var topLabel: UILabel!
+    @IBOutlet weak var bottomLabel: UILabel!
+    @IBOutlet weak var bottomView: UIView!
+    @IBOutlet weak var topView: UIView!
+    
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        self.bottomView.transform = CGAffineTransform(rotationAngle: CGFloat(Double.pi/4))
+        self.topView.makeRound(round: 5.0)
+    }
+}
