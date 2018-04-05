@@ -30,6 +30,8 @@ class CustomInputView: UIView {
     /// Done action delegate
     var doneTapped: (_ sender: Any) -> Void = {_ in }
     
+    var type: Constants.Enumeration.InputType = .Other
+    
     /**
      View init
      */
@@ -46,6 +48,7 @@ class CustomInputView: UIView {
         frame.origin.x = 0
         frame.origin.y = 0
         frame.size.width = UIScreen.main.bounds.width
+        view.type = inputType
         switch inputType {
         case .Date, .Time:
             view.dateView.frame = frame
@@ -72,6 +75,10 @@ class CustomInputView: UIView {
      Done button action
      */
     @IBAction func doneAction(_ sender: Any) {
-        self.doneTapped(sender)
+        if self.type == .Date || self.type == .Time {
+            self.doneTapped(self.datePicker.date)
+        } else {
+            self.doneTapped(sender)
+        }
     }
 }
