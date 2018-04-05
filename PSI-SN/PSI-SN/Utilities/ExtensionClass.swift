@@ -128,3 +128,23 @@ public extension EnumCollection {
         return Array(self.cases())
     }
 }
+
+class DateCustomization: NSObject{
+    func createDateFormatter() -> DateFormatter {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }
+    
+    func dateToString(date: Date, format: String) -> String{
+        let formatter = self.createDateFormatter()
+        formatter.dateFormat = format
+        return formatter.string(from: date)
+    }
+    
+    func stringToDate(string: String, format: String) -> Date{
+        let formatter = self.createDateFormatter()
+        formatter.dateFormat = format
+        return formatter.date(from: string)!
+    }
+}
