@@ -9,26 +9,37 @@
 import UIKit
 import GoogleMaps
 
+let max: CGFloat = 122.16
+let min: CGFloat = 25.16
+
 class ViewController: UIViewController {
     @IBOutlet weak var mapContainerView: GMSMapView!
     @IBOutlet weak var filterContainerView: UIView!
     @IBOutlet weak var dateTextField: UITextField!
     @IBOutlet weak var timeTextField: UITextField!
+    @IBOutlet weak var dropButton: UIButton!
+    @IBOutlet weak var constTopFilterView: NSLayoutConstraint!
     var regions: [Region] = []
+    var dateFilter: Date = Date()
+    var timeFilter: Date = Date()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         self.cameraToCenter(coordinate: CLLocationCoordinate2D(latitude: 1.290270, longitude: 103.851959), zoom: 10.7)
-        self.filterContainerView.addBorderToEdge(edge: .bottom, color: .black, height: 1.0)
         
-        Services.sharedInstance.getPollutantData(params: nil) { (results, success) in
-            if success {
-                self.regions = results as! [Region]
-                self.composePin(regions: self.regions)
-            }
-        }
+        self.getPollutions(parameter: nil)
+        
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(self.draggedView(_:)))
+        self.filterContainerView.isUserInteractionEnabled = true
+        self.filterContainerView.addGestureRecognizer(panGesture)
+        
+        self.dropButton.imageView?.contentMode = .scaleAspectFit
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
     }
 
     override func didReceiveMemoryWarning() {
@@ -41,6 +52,20 @@ class ViewController: UIViewController {
         detail.selectedRegion = sender as! Region
     }
     
+//    MARK: Customs
+    func getPollutions(parameter: [String : Any]?) {
+        HUD.sharedInstance.showHUD()
+        Services.sharedInstance.getPollutantData(params: parameter) { (results, success) in
+            if success {
+                self.regions = results as! [Region]
+                self.composePin(regions: self.regions)
+                HUD.sharedInstance.setComplete()
+            } else {
+                HUD.sharedInstance.dismissWithMessage(msg: "Failed")
+            }
+        }
+    }
+    
     func composePin(regions: [Region]) {
         var index = 0
         for region in regions {
@@ -51,8 +76,8 @@ class ViewController: UIViewController {
                 }
                 pin.userData = index
                 pin.map = mapContainerView
-                index+=1
             }
+            index+=1
         }
     }
     
@@ -75,9 +100,61 @@ class ViewController: UIViewController {
     func getSelectedRegion(index: Int) -> Region{
         return self.regions[index]
     }
+    
+    @objc func draggedView(_ sender: UIPanGestureRecognizer){
+        let translation = sender.translation(in: self.view)
+        var top: CGFloat = self.filterContainerView.center.y + translation.y
+        if sender.velocity(in: self.filterContainerView).y > 0 {
+            top = top > max ? max : top
+        } else {
+            top = top < min ? min : top
+        }
+        self.setFilterCenter(center: CGPoint(x: self.filterContainerView.center.x, y: top))
+        sender.setTranslation(CGPoint.zero, in: self.view)
+    }
+    
+    func setFilterCenter(center: CGPoint!){
+        self.filterContainerView.center = center
+        self.rotateButton(angle: CGFloat(center.y==min ? 0 : Double.pi))
+        self.constTopFilterView.constant = self.filterContainerView.bounds.origin.y
+        
+    }
+    
+    func rotateButton(angle: CGFloat){
+        self.dropButton.transform = CGAffineTransform(rotationAngle: angle)
+    }
+    
+    func refreshData(){
+        var params: [String : Any] = [:]
+        if !(self.dateTextField.text?.isEmpty)! {
+            params["date"] = DateCustomization().dateToString(date: self.dateFilter, format: "yyyy-MM-dd")
+        }
+        if !(self.timeTextField.text?.isEmpty)! {
+            params["time"] = DateCustomization().dateToString(date: self.timeFilter, format: "yyyy-MM-dd'T'HH:mm:ss")
+        }
+        self.getPollutions(parameter: params)
+    }
+    
+//    MARK: Actions
+    @IBAction func dropAction(_ sender: Any) {
+        var top: CGFloat = 0.0
+        if self.filterContainerView.center.y >= max {
+            top = min
+        } else {
+            top = max
+        }
+        self.setFilterCenter(center: CGPoint(x: self.filterContainerView.center.x, y: top))
+    }
 }
 
 extension ViewController: GMSMapViewDelegate{
+    func mapView(_ mapView: GMSMapView, markerInfoWindow marker: GMSMarker) -> UIView? {
+        let region = self.getSelectedRegion(index: marker.userData as! Int)
+        let view = Bundle.main.loadNibNamed("MapMarker", owner: self, options: nil)?.first as! MapMarker
+        view.topLabel.text = "SINGAPORE"
+        view.bottomLabel.text = region.name
+        return view
+    }
     func mapView(_ mapView: GMSMapView, didTapInfoWindowOf marker: GMSMarker) {
         let region = self.getSelectedRegion(index: marker.userData as! Int)
         self.gotoDetail(region: region)
@@ -98,10 +175,36 @@ extension ViewController: GMSMapViewDelegate{
 
 extension ViewController: UITextFieldDelegate{
     func textFieldDidBeginEditing(_ textField: UITextField) {
+        var customInput: CustomInputView!
         if textField == self.dateTextField {
-            textField.inputView = CustomInputView.instanceFromNIB(inputType: .Date)
+            customInput = CustomInputView.instanceFromNIB(inputType: .Date)
+            textField.inputView = customInput
         } else if textField == self.timeTextField {
-            textField.inputView = CustomInputView.instanceFromNIB(inputType: .Time)
+            customInput = CustomInputView.instanceFromNIB(inputType: .Time)
+            textField.inputView = customInput
         }
+        customInput.doneTapped = { (sender) in
+            var str: String = ""
+            if customInput.type == .Date {
+                self.dateFilter = sender as! Date
+                str = DateCustomization().dateToString(date: self.dateFilter, format: "dd MMMM yyyy")
+            } else {
+                self.timeFilter = sender as! Date
+                str = DateCustomization().dateToString(date: self.timeFilter, format: "HH:mm")
+            }
+            textField.text = str
+            textField.endEditing(true)
+            self.refreshData()
+        }
+        customInput.cancelTapped = { (sender) in
+            textField.endEditing(true)
+            self.refreshData()
+        }
+    }
+    
+    func textFieldShouldClear(_ textField: UITextField) -> Bool {
+        textField.text = ""
+        self.refreshData()
+        return true
     }
 }
