@@ -12,6 +12,7 @@ target 'PSI-SN' do
   pod 'Tailor'
   pod 'GoogleMaps'
   pod 'GooglePlaces'
+  pod 'M13ProgressSuite'
 
   target 'PSI-SNTests' do
     inherit! :search_paths
