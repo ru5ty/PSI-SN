@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import M13ProgressSuite
 
 //    MARK: UIView extension
 extension UIView {
@@ -146,5 +147,46 @@ class DateCustomization: NSObject{
         let formatter = self.createDateFormatter()
         formatter.dateFormat = format
         return formatter.date(from: string)!
+    }
+}
+
+//    MARK: HUD
+class HUD : NSObject{
+    var hud = M13ProgressHUD()
+    var ring = M13ProgressViewRing()
+    
+    static let sharedInstance: HUD = {
+        let hud = HUD.init()
+        hud.ring = M13ProgressViewRing.init()
+        hud.ring.showPercentage = false
+        hud.ring.indeterminate = true
+        hud.ring.perform(M13ProgressViewActionNone, animated: false)
+        hud.hud = M13ProgressHUD.init(progressView: hud.ring)
+        hud.hud.progressViewSize = CGSize(width: 60.0, height: 60.0)
+        hud.hud.animationCentered = true
+        hud.hud.applyBlurToBackground = true
+        hud.hud.orientation = .portrait
+        let screen = UIScreen.main
+        hud.hud.animationPoint = CGPoint(x: screen.bounds.width/2, y: screen.bounds.height/2)
+        
+        let window = (UIApplication.shared.delegate as! AppDelegate).window
+        window?.addSubview(hud.hud)
+        
+        return hud
+    }()
+    
+    func showHUD() {
+        self.hud.show(true)
+    }
+    
+    func dismissWithMessage(msg: String) {
+        self.ring.perform(msg == "" ? M13ProgressViewActionSuccess : M13ProgressViewActionFailure, animated: true)
+        //        self.hud.status = msg
+        self.perform(#selector(setComplete), with: nil, afterDelay: 2)
+    }
+    
+    @objc func setComplete() {
+        self.ring.perform(M13ProgressViewActionNone, animated: true)
+        self.hud.hide(true)
     }
 }
